@@ -1,0 +1,30 @@
+# Bad YAML - Inconsistent indentation
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bad-config
+    namespace: default  # Wrong indentation (4 spaces instead of 2)
+  labels:
+    app: example
+      version: "1.0"  # Wrong indentation (6 spaces instead of 4)
+  annotations:
+    description: "This YAML has indentation issues"
+data:
+  database:
+    host: localhost
+      port: 5432  # Wrong indentation
+    credentials:
+        username: admin  # Wrong indentation (8 spaces instead of 6)
+        password: secret
+  redis:
+    host: localhost
+    port: 6379
+    password: redis-secret
+  features:
+    - item1
+      - item2  # Wrong indentation for sequence item
+    - item3
+  settings:
+    debug: true
+      verbose: false  # Wrong indentation
+    timeout: 30

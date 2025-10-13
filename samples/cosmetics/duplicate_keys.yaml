@@ -1,0 +1,29 @@
+# Bad YAML - Duplicate keys
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: duplicate-keys-config
+  name: duplicate-name  # Duplicate key
+  namespace: default
+  labels:
+    app: example
+    version: "1.0"
+    app: duplicate-app  # Duplicate key
+data:
+  database:
+    host: localhost
+    port: 5432
+    host: duplicate-host  # Duplicate key
+    credentials:
+      username: admin
+      password: secret
+      username: duplicate-user  # Duplicate key
+  redis:
+    host: localhost
+    port: 6379
+    password: redis-secret
+  features:
+    - authentication
+    - authorization
+    - logging
+    - monitoring

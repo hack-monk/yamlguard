@@ -1,0 +1,23 @@
+# Bad YAML - Sequence indentation issues
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sequence-config
+  namespace: default
+data:
+  features:
+    - authentication
+  - authorization  # Wrong indentation (should be indented under features)
+    - logging
+  - monitoring  # Wrong indentation
+  settings:
+    - debug: true
+    - verbose: false
+    - timeout: 30
+  items:
+    - name: item1
+      value: value1
+    - name: item2
+        value: value2  # Wrong indentation (8 spaces instead of 6)
+    - name: item3
+      value: value3

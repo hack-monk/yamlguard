@@ -1,0 +1,43 @@
+# Invalid Kubernetes Deployment - Wrong types
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: default
+  labels:
+    app: nginx
+    version: "1.0"
+spec:
+  replicas: "three"  # Should be integer
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.20
+          ports:
+            - containerPort: "80"  # Should be integer
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          env:
+            - name: ENV
+              value: "production"
+            - name: DEBUG
+              value: "false"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/nginx
+      volumes:
+        - name: config-volume
+          configMap:
+            name: nginx-config

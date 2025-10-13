@@ -1,0 +1,54 @@
+# YAMLGuard Configuration
+# This file configures YAMLGuard behavior for this project
+
+# Indentation settings
+indent:
+  step: 2
+  strict: true
+  fix: false
+
+# Cosmetics checking
+cosmetics:
+  enabled: true
+  trailing_spaces: true
+  tabs: true
+  bom: true
+  duplicate_keys: true
+  line_length: 120
+
+# Kubernetes validation
+kubernetes:
+  enabled: false
+  version: "1.30"
+  strict: false
+  use_kubeconform: true
+  cache_schemas: true
+
+# Secrets scanning
+secrets:
+  enabled: false
+  baseline: null
+  allowlist: []
+  entropy_threshold: 4.5
+  use_detect_secrets: false
+  use_gitleaks: false
+
+# Output format
+reporter:
+  format: "stylish"
+  color: true
+  verbose: false
+  fail_on: "error"
+
+# File patterns
+include:
+  - "**/*.yaml"
+  - "**/*.yml"
+
+exclude:
+  - "**/node_modules/**"
+  - "**/.git/**"
+  - "**/vendor/**"
+
+# CI settings
+ci: false

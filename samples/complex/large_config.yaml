@@ -1,0 +1,170 @@
+# Large, complex YAML configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: large-config
+  namespace: default
+  labels:
+    app: example
+    version: "1.0"
+    environment: "production"
+    team: "platform"
+  annotations:
+    description: "Large configuration file for testing"
+    created-by: "yamlguard"
+    last-updated: "2024-01-01"
+data:
+  application:
+    name: "my-application"
+    version: "1.0.0"
+    environment: "production"
+    debug: false
+    verbose: false
+    log_level: "info"
+    timeout: 30
+    retry_count: 3
+    retry_delay: 1000
+  database:
+    primary:
+      host: "db-primary.example.com"
+      port: 5432
+      name: "myapp_production"
+      username: "app_user"
+      password: "secure_password_123"
+      ssl: true
+      ssl_mode: "require"
+      pool_size: 10
+      max_connections: 100
+      connection_timeout: 30
+      query_timeout: 60
+    replica:
+      host: "db-replica.example.com"
+      port: 5432
+      name: "myapp_production"
+      username: "app_user"
+      password: "secure_password_123"
+      ssl: true
+      ssl_mode: "require"
+      pool_size: 5
+      max_connections: 50
+      connection_timeout: 30
+      query_timeout: 60
+  redis:
+    primary:
+      host: "redis-primary.example.com"
+      port: 6379
+      password: "redis_password_123"
+      db: 0
+      max_connections: 20
+      connection_timeout: 30
+      command_timeout: 60
+    cluster:
+      nodes:
+        - "redis-1.example.com:6379"
+        - "redis-2.example.com:6379"
+        - "redis-3.example.com:6379"
+      password: "redis_password_123"
+      max_connections: 30
+      connection_timeout: 30
+      command_timeout: 60
+  monitoring:
+    prometheus:
+      enabled: true
+      endpoint: "http://prometheus.example.com:9090"
+      scrape_interval: "30s"
+      scrape_timeout: "10s"
+    grafana:
+      enabled: true
+      endpoint: "http://grafana.example.com:3000"
+      api_key: "grafana_api_key_1234567890"
+    jaeger:
+      enabled: true
+      endpoint: "http://jaeger.example.com:14268"
+      service_name: "my-application"
+      sample_rate: 0.1
+  features:
+    authentication:
+      enabled: true
+      provider: "oauth2"
+      client_id: "oauth_client_id_123"
+      client_secret: "oauth_client_secret_456"
+      redirect_uri: "https://myapp.example.com/auth/callback"
+      scopes:
+        - "read"
+        - "write"
+        - "admin"
+    authorization:
+      enabled: true
+      provider: "rbac"
+      roles:
+        - "admin"
+        - "user"
+        - "guest"
+      permissions:
+        - "read:users"
+        - "write:users"
+        - "delete:users"
+        - "read:posts"
+        - "write:posts"
+        - "delete:posts"
+    logging:
+      enabled: true
+      level: "info"
+      format: "json"
+      output: "stdout"
+      file:
+        enabled: true
+        path: "/var/log/myapp.log"
+        max_size: "100MB"
+        max_age: 7
+        max_backups: 3
+    monitoring:
+      enabled: true
+      metrics:
+        enabled: true
+        endpoint: "/metrics"
+        port: 8080
+      health:
+        enabled: true
+        endpoint: "/health"
+        port: 8080
+      readiness:
+        enabled: true
+        endpoint: "/ready"
+        port: 8080
+  security:
+    tls:
+      enabled: true
+      cert_file: "/etc/ssl/certs/myapp.crt"
+      key_file: "/etc/ssl/private/myapp.key"
+      ca_file: "/etc/ssl/certs/ca.crt"
+    cors:
+      enabled: true
+      origins:
+        - "https://myapp.example.com"
+        - "https://admin.example.com"
+      methods:
+        - "GET"
+        - "POST"
+        - "PUT"
+        - "DELETE"
+        - "OPTIONS"
+      headers:
+        - "Content-Type"
+        - "Authorization"
+        - "X-Requested-With"
+    rate_limiting:
+      enabled: true
+      requests_per_minute: 100
+      burst_size: 20
+      window_size: "1m"
+  cache:
+    enabled: true
+    provider: "redis"
+    ttl: 3600
+    max_size: 1000
+    eviction_policy: "lru"
+    keys:
+      user_sessions: 1800
+      api_responses: 300
+      database_queries: 60

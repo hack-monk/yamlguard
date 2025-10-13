@@ -1,0 +1,27 @@
+# Bad YAML - Non-canonical boolean values
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: boolean-format-config
+  namespace: default
+  labels:
+    app: example
+    version: "1.0"
+data:
+  settings:
+    debug: yes  # Should be true
+    verbose: no  # Should be false
+    enabled: on  # Should be true
+    disabled: off  # Should be false
+    active: yes  # Should be true
+    inactive: no  # Should be false
+  features:
+    authentication: yes  # Should be true
+    authorization: no  # Should be false
+    logging: on  # Should be true
+    monitoring: off  # Should be false
+  database:
+    ssl_enabled: yes  # Should be true
+    ssl_verify: no  # Should be false
+    connection_pooling: on  # Should be true
+    connection_pooling: off  # Should be false

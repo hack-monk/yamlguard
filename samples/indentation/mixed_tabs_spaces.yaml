@@ -1,0 +1,22 @@
+# Bad YAML - Mixed tabs and spaces
+apiVersion: v1
+kind: ConfigMap
+metadata:
+	name: mixed-config  # Tab character
+  namespace: default  # Spaces
+data:
+	database:  # Tab character
+		host: localhost  # Tab character
+		port: 5432  # Tab character
+	credentials:
+		username: admin  # Tab character
+		password: secret  # Tab character
+	redis:
+		host: localhost  # Tab character
+		port: 6379  # Tab character
+		password: redis-secret  # Tab character
+	features:
+		- authentication  # Tab character
+		- authorization  # Tab character
+		- logging  # Tab character
+		- monitoring  # Tab character
