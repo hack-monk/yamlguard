@@ -2,7 +2,6 @@
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PyPI version](https://badge.fury.io/py/yamlguard.svg)](https://badge.fury.io/py/yamlguard)
 
 **Your friendly neighborhood YAML validator.** Because YAML indentation errors shouldn't ruin your day.
 
@@ -30,19 +29,15 @@ But it's not just about indentation. Modern YAML files often contain sensitive i
 
 ## Getting Started
 
-Installation is straightforward:
-
-```bash
-pip install yamlguard
-```
-
-Or if you prefer to build from source:
+Installation is straightforward—install from source:
 
 ```bash
 git clone https://github.com/yamlguard/yamlguard.git
 cd yamlguard
 pip install -e .
 ```
+
+This installs YAMLGuard in editable mode, so you can make changes and they'll be reflected immediately.
 
 Once installed, you're ready to go. Let's walk through the basics.
 
@@ -298,7 +293,8 @@ jobs:
           python-version: '3.10'
       
       - name: Install YAMLGuard
-        run: pip install yamlguard
+        run: |
+          pip install git+https://github.com/yamlguard/yamlguard.git
       
       - name: Lint YAML files
         run: yamlguard lint . --format json --no-color
@@ -324,7 +320,7 @@ yamlguard:
   stage: validate
   image: python:3.10
   before_script:
-    - pip install yamlguard
+    - pip install git+https://github.com/yamlguard/yamlguard.git
   script:
     - yamlguard lint . --format json --no-color
     - yamlguard scan-secrets . --format json --no-color || true
@@ -348,7 +344,7 @@ pipeline {
     stages {
         stage('YAML Validation') {
             steps {
-                sh 'pip install yamlguard'
+                sh 'pip install git+https://github.com/yamlguard/yamlguard.git'
                 sh 'yamlguard lint . --format json --no-color'
                 sh 'yamlguard scan-secrets . --format json --no-color || true'
             }
@@ -450,7 +446,7 @@ Catch issues before they even make it to your repository. Add YAMLGuard to your 
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/yamlguard/yamlguard
+  - repo: https://github.com/hack-monk/yamlguard
     rev: v0.1.0
     hooks:
       - id: yamlguard-lint
@@ -567,4 +563,4 @@ The first release of YAMLGuard! This version includes:
 
 **Made with ❤️ for developers who just want their YAML to work.**
 
-Questions? Issues? Ideas? Open an issue on GitHub or reach out. We're here to help.
+Questions? Issues? Ideas? Open an issue on GitHub or reach out.
