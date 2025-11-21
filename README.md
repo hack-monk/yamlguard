@@ -32,7 +32,7 @@ But it's not just about indentation. Modern YAML files often contain sensitive i
 Installation is straightforward—install from source:
 
 ```bash
-git clone https://github.com/yamlguard/yamlguard.git
+git clone https://github.com/hack-monk/yamlguard.git
 cd yamlguard
 pip install -e .
 ```
@@ -301,7 +301,7 @@ jobs:
       
       - name: Install YAMLGuard
         run: |
-          pip install git+https://github.com/yamlguard/yamlguard.git
+          pip install git+https://github.com/hack-monk/yamlguard.git
       
       - name: Lint YAML files
         run: yamlguard lint . --format json --no-color
@@ -327,7 +327,7 @@ yamlguard:
   stage: validate
   image: python:3.10
   before_script:
-    - pip install git+https://github.com/yamlguard/yamlguard.git
+    - pip install git+https://github.com/hack-monk/yamlguard.git
   script:
     - yamlguard lint . --format json --no-color
     - yamlguard scan-secrets . --format json --no-color || true
@@ -351,7 +351,7 @@ pipeline {
     stages {
         stage('YAML Validation') {
             steps {
-                sh 'pip install git+https://github.com/yamlguard/yamlguard.git'
+                sh 'pip install git+https://github.com/hack-monk/yamlguard.git'
                 sh 'yamlguard lint . --format json --no-color'
                 sh 'yamlguard scan-secrets . --format json --no-color || true'
             }
