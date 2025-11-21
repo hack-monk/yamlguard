@@ -71,7 +71,14 @@ yamlguard kube-validate manifests/ --kube-version 1.30
 
 This catches schema violations before they cause deployment failures. 
 
-**⚠️ Current Limitations:** Kubernetes validation in v0.1.0 is functional for basic schema validation, but we're actively refining schema reference handling. Some complex manifests with deeply nested references may not validate perfectly yet. For production use, we recommend:
+**⚠️ Current Limitations:** 
+
+Kubernetes validation in v0.1.0 works well for core API resources (Deployments, Services, ConfigMaps, Secrets, etc.), but has some limitations:
+- **CRD Support**: Custom Resource Definitions may not validate fully due to schema reference handling that's still being refined
+- **Complex References**: Manifests with deeply nested or circular references may have validation gaps
+- **Version Coverage**: Some Kubernetes versions may have incomplete schema coverage
+
+**For production use, we recommend:**
 - Using it as a first-pass validation alongside `kubectl --dry-run`
 - Testing critical manifests in a staging environment
 - Reporting any validation issues you encounter so we can improve coverage
@@ -461,9 +468,9 @@ Now every commit is automatically checked. No more "oops, forgot to lint" moment
 
 ## Current Status & Maturity
 
-YAMLGuard v0.1.0 is a solid initial release, but it's early in its lifecycle. Here's what you should know:
+YAMLGuard v0.1.0 is ready for real-world use. Core indentation, style checks, and secret scanning are stable, and Kubernetes validation is under active improvement. Here's what you should know:
 
-### ✅ Production-Ready Features
+### ✅ Stable Features
 
 These features are stable and ready for production use:
 - **Indentation Detection**: Precise tree-walking validation with exact line/column reporting
@@ -476,8 +483,16 @@ These features are stable and ready for production use:
 ### 🚧 Features in Active Development
 
 These features work but have known limitations:
-- **Kubernetes Validation**: Basic schema validation works, but complex manifests with nested references may have issues. See the Kubernetes Validation section above for details.
-- **Advanced Secret Detection**: Integration with external tools (detect-secrets, gitleaks) is planned for future releases.
+
+**Kubernetes Validation:**
+- ✅ Core API resources (Deployments, Services, ConfigMaps, etc.) validate correctly
+- ⚠️ Custom Resource Definitions (CRDs) may not validate fully—schema reference handling is being refined
+- ⚠️ Complex manifests with deeply nested references may have validation gaps
+- ⚠️ Some Kubernetes versions may have incomplete schema coverage
+- 💡 **Recommendation**: Use alongside `kubectl --dry-run` for critical deployments
+
+**Advanced Secret Detection:**
+- Integration with external tools (detect-secrets, gitleaks) is planned for future releases
 
 ### 📊 Test Coverage
 
@@ -514,6 +529,21 @@ Your feedback helps us improve faster.
 
 YAMLGuard is fast. We use `ruamel.yaml` for efficient parsing, implement smart caching for Kubernetes schemas, and keep dependencies minimal. It's designed to run quickly even on large codebases, so it won't slow down your workflow.
 
+## Security & Privacy
+
+Since YAMLGuard deals with sensitive information (secrets scanning, config validation), here's what you should know:
+
+- **Local Processing**: YAMLGuard runs entirely locally and does not send your YAML files or secrets to any external service. All processing happens on your machine.
+
+- **Secret Detection**: Secret detection is best-effort and rule-based. It should complement, not replace, other security controls (e.g., repository-wide secret scanners, pre-commit hooks, or dedicated security tools).
+
+- **Tuning for Your Environment**: For highly sensitive environments, consider:
+  - Adjusting `entropy_threshold` to reduce false positives or catch more potential secrets
+  - Adding `custom_rules` that match your internal key formats and naming conventions
+  - Using it as part of a layered security approach alongside other tools
+
+- **No Data Collection**: YAMLGuard does not collect, store, or transmit any data about your files or findings.
+
 ## Contributing
 
 We'd love your help! Whether it's bug reports, feature ideas, or code contributions, everything is welcome.
@@ -525,11 +555,15 @@ We'd love your help! Whether it's bug reports, feature ideas, or code contributi
 4. Add tests (we love tests!)
 5. Submit a pull request
 
-**Understanding the Codebase:**
-- Check out [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the system design
-- The codebase is modular—each component has a clear responsibility
-- Tests are in the `tests/` directory, organized by feature
-- Sample files for testing are in the `samples/` directory
+**For Contributors:**
+
+Getting started with the codebase is straightforward:
+- **Architecture overview**: See [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the system design
+- **How to run tests**: See [TESTING.md](TESTING.md) for testing guidelines and examples
+- **Sample files and edge cases**: Check out `samples/` directory for test YAML files covering various scenarios
+- **Test suite**: Tests are in the `tests/` directory, organized by feature
+
+The codebase is modular—each component has a clear responsibility, making it easy to understand and extend.
 
 **What We're Looking For:**
 - Bug fixes and edge case handling
