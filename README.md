@@ -24,7 +24,7 @@ But it's not just about indentation. Modern YAML files often contain sensitive i
 
 **Find secrets before they leak.** Accidentally committing credentials is a nightmare scenario. YAMLGuard scans for AWS keys, GitHub tokens, private keys, and other sensitive data using pattern matching and entropy analysis.
 
-**Fix things automatically (when you want it to).** Not just a linter—YAMLGuard can actually fix indentation issues for you, safely preserving your comments and structure.
+**Fix things automatically (when you want it to).** Not just a linter—YAMLGuard can actually fix indentation issues for you, safely preserving your comments and structure. **Important:** Always use `--backup` when fixing files in-place, especially for complex or large YAML files. Review the changes before committing.
 
 **Play nice with your workflow.** Beautiful colored output for humans, JSON/JSONL formats for your CI/CD pipelines. It fits wherever you need it.
 
@@ -74,7 +74,14 @@ If you're working with Kubernetes, YAMLGuard can validate your manifests against
 yamlguard kube-validate manifests/ --kube-version 1.30
 ```
 
-This catches schema violations before they cause deployment failures. Note that Kubernetes validation is still evolving—basic schema validation works great, but we're continuously improving it.
+This catches schema violations before they cause deployment failures. 
+
+**⚠️ Current Limitations:** Kubernetes validation in v0.1.0 is functional for basic schema validation, but we're actively refining schema reference handling. Some complex manifests with deeply nested references may not validate perfectly yet. For production use, we recommend:
+- Using it as a first-pass validation alongside `kubectl --dry-run`
+- Testing critical manifests in a staging environment
+- Reporting any validation issues you encounter so we can improve coverage
+
+We're continuously improving this feature and welcome feedback on edge cases you encounter.
 
 ### Secrets Scanning
 
@@ -85,6 +92,19 @@ yamlguard scan-secrets manifests/
 ```
 
 It detects AWS credentials, GitHub tokens, private keys, API keys (Slack, Twilio, JWT), and even high-entropy strings that might be secrets. You can adjust the sensitivity with the `--entropy` flag if you want to tune the detection.
+
+**Understanding False Positives and False Negatives:**
+
+Secret scanning uses pattern matching and entropy analysis, which means:
+- **False Positives:** Some legitimate strings (like UUIDs, hashes, or random IDs) might trigger alerts. Review each finding carefully—not every match is a secret.
+- **False Negatives:** Not all secret formats are covered. Custom or proprietary secret formats may not be detected. Always use this as part of a broader security strategy, not as the only defense.
+
+**Best Practices:**
+- Start with default settings and adjust `--entropy` based on your codebase
+- Use custom rules (see Advanced Features) for team-specific patterns
+- Review findings manually—automated tools are helpers, not replacements for security reviews
+- Consider this a first line of defense alongside other security tools
+- For high-security environments, combine with tools like `detect-secrets` or `gitleaks` (integrations coming soon)
 
 ## Configuration
 
@@ -175,7 +195,14 @@ Options:
 
 ### `yamlguard fix`
 
-Fixes indentation issues in YAML files. This is safe—it preserves comments and structure.
+Fixes indentation issues in YAML files. This preserves comments and structure, but **always use `--backup`** when modifying files in-place.
+
+**⚠️ Safety First:**
+- Auto-fixing is powerful but can be risky on complex or large YAML files
+- Always create backups with `--backup` flag
+- Review changes with `git diff` before committing
+- Test fixed files to ensure they still work as expected
+- Consider fixing files one at a time for critical configurations
 
 ```bash
 yamlguard fix [paths...] [OPTIONS]
@@ -183,7 +210,7 @@ yamlguard fix [paths...] [OPTIONS]
 Options:
   -i, --indent INTEGER        Indentation step size [default: 2]
   --in-place                  Modify files in place
-  --backup                    Create backup files (recommended!)
+  --backup                    Create backup files (HIGHLY RECOMMENDED!)
   -c, --config PATH           Configuration file path
 ```
 
@@ -210,8 +237,11 @@ Most of the time, you'll just want to check your files:
 # Quick check before committing
 yamlguard lint .
 
-# Found issues? Fix them automatically
+# Found issues? Fix them automatically (with backup!)
 yamlguard fix . --in-place --backup
+
+# Always review changes before committing
+git diff
 ```
 
 ### Kubernetes Projects
@@ -240,16 +270,111 @@ yamlguard scan-secrets config/ --entropy 4.0
 
 ### CI/CD Integration
 
-YAMLGuard fits seamlessly into your pipelines:
+YAMLGuard fits seamlessly into your pipelines. Here are ready-to-use configurations:
+
+#### GitHub Actions
+
+```yaml
+# .github/workflows/yamlguard.yml
+name: YAMLGuard Validation
+
+on:
+  pull_request:
+    paths:
+      - '**.yaml'
+      - '**.yml'
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install YAMLGuard
+        run: pip install yamlguard
+      
+      - name: Lint YAML files
+        run: yamlguard lint . --format json --no-color
+      
+      - name: Scan for secrets
+        run: yamlguard scan-secrets . --format json --no-color
+        continue-on-error: true  # Don't fail the build, but report findings
+      
+      - name: Validate Kubernetes manifests
+        if: contains(github.event.head_commit.message, 'k8s') || contains(github.event.head_commit.message, 'kubernetes')
+        run: yamlguard kube-validate manifests/ --format json --no-color
+        continue-on-error: true  # K8s validation is still evolving
+```
+
+#### GitLab CI
+
+```yaml
+# .gitlab-ci.yml
+stages:
+  - validate
+
+yamlguard:
+  stage: validate
+  image: python:3.10
+  before_script:
+    - pip install yamlguard
+  script:
+    - yamlguard lint . --format json --no-color
+    - yamlguard scan-secrets . --format json --no-color || true
+  artifacts:
+    when: always
+    reports:
+      junit: yamlguard-report.json
+  only:
+    changes:
+      - "**/*.yaml"
+      - "**/*.yml"
+```
+
+#### Jenkins Pipeline
+
+```groovy
+// Jenkinsfile
+pipeline {
+    agent any
+    
+    stages {
+        stage('YAML Validation') {
+            steps {
+                sh 'pip install yamlguard'
+                sh 'yamlguard lint . --format json --no-color'
+                sh 'yamlguard scan-secrets . --format json --no-color || true'
+            }
+        }
+    }
+    
+    post {
+        always {
+            archiveArtifacts artifacts: 'yamlguard-report.json', allowEmptyArchive: true
+        }
+    }
+}
+```
+
+#### Command-Line Usage
+
+For custom pipelines or local scripts:
 
 ```bash
 # JSON output for programmatic handling
-yamlguard lint manifests/ --format json
+yamlguard lint manifests/ --format json --no-color
 
 # JSONL for streaming/processing
-yamlguard lint manifests/ --format jsonl
+yamlguard lint manifests/ --format jsonl --no-color
 
-# Exit codes work for gating
+# Exit codes work for gating (exit 0 = success, exit 1 = errors found)
 yamlguard lint manifests/ && echo "✅ All checks passed"
 ```
 
@@ -338,28 +463,56 @@ repos:
 
 Now every commit is automatically checked. No more "oops, forgot to lint" moments.
 
-## Current Status
+## Current Status & Maturity
 
-YAMLGuard v0.1.0 is production-ready and battle-tested. Here's what's working today:
+YAMLGuard v0.1.0 is a solid initial release, but it's early in its lifecycle. Here's what you should know:
 
-**✅ Fully Functional:**
-- Precise indentation detection with tree-walking validation
-- Style checking (trailing spaces, tabs, line length, boolean format)
-- Comprehensive secrets scanning (AWS, GitHub, private keys, API keys, high-entropy strings)
-- Safe auto-fix that preserves comments
-- Beautiful CLI output with multiple format options
-- Flexible configuration system
+### ✅ Production-Ready Features
 
-**🚧 In Active Development:**
-- Kubernetes validation is working but we're refining the schema reference handling
-- Advanced secret detection integrations (detect-secrets, gitleaks) are coming soon
+These features are stable and ready for production use:
+- **Indentation Detection**: Precise tree-walking validation with exact line/column reporting
+- **Style Checking**: Trailing spaces, tabs, line length, boolean format, duplicate keys
+- **Secrets Scanning**: Pattern-based detection for common secrets (AWS, GitHub, private keys, API keys)
+- **Auto-fix**: Safe indentation normalization that preserves comments
+- **CLI Output**: Beautiful colored output with multiple format options (stylish, JSON, JSONL)
+- **Configuration**: Flexible YAML-based configuration system
 
-**🧪 Tested and Verified:**
+### 🚧 Features in Active Development
+
+These features work but have known limitations:
+- **Kubernetes Validation**: Basic schema validation works, but complex manifests with nested references may have issues. See the Kubernetes Validation section above for details.
+- **Advanced Secret Detection**: Integration with external tools (detect-secrets, gitleaks) is planned for future releases.
+
+### 📊 Test Coverage
+
 - 20+ sample files covering edge cases
 - 500+ issues detected across all categories
 - Complex nested structures handled correctly
 - Auto-fix functionality verified
 - CI/CD integration tested and ready
+
+### 🎯 Recommended Use Cases
+
+**Great for:**
+- Development workflows and pre-commit hooks
+- CI/CD pipelines for catching issues early
+- Local development and code reviews
+- Teams standardizing YAML formatting
+- Security scanning as part of a broader strategy
+
+**Use with caution for:**
+- Critical production deployments (always validate with `kubectl --dry-run` as well)
+- Large-scale automated fixes (test on a subset first)
+- As the sole security tool (combine with other security practices)
+
+### 🐛 Reporting Issues
+
+Found a bug? Encountered an edge case? We'd love to hear about it! Open an issue on GitHub with:
+- The YAML file (or a minimal example)
+- The command you ran
+- Expected vs. actual behavior
+
+Your feedback helps us improve faster.
 
 ## Performance
 
@@ -369,11 +522,28 @@ YAMLGuard is fast. We use `ruamel.yaml` for efficient parsing, implement smart c
 
 We'd love your help! Whether it's bug reports, feature ideas, or code contributions, everything is welcome.
 
+**Getting Started:**
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
 4. Add tests (we love tests!)
 5. Submit a pull request
+
+**Understanding the Codebase:**
+- Check out [ARCHITECTURE.md](ARCHITECTURE.md) for a detailed overview of the system design
+- The codebase is modular—each component has a clear responsibility
+- Tests are in the `tests/` directory, organized by feature
+- Sample files for testing are in the `samples/` directory
+
+**What We're Looking For:**
+- Bug fixes and edge case handling
+- Improvements to Kubernetes validation coverage
+- Additional secret detection patterns
+- Performance optimizations
+- Documentation improvements
+- Integration examples for other CI/CD systems
+
+**Questions?** Open an issue and we'll help you get started!
 
 ## License
 
